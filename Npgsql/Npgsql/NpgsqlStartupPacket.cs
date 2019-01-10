@@ -34,6 +34,8 @@ using System.Collections.Generic;
 
 namespace Npgsql
 {
+    using System.Threading;
+
     /// <summary>
     /// This class represents a StartupPacket message of PostgreSQL
     /// protocol.
@@ -84,7 +86,7 @@ namespace Npgsql
             }
         }
 
-        public override void WriteToStream(Stream output_stream)
+        protected override void WriteToStreamInternal(NpgsqlBufferedStream outputStream)
         {
             NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "WriteToStream");
 
@@ -95,18 +97,18 @@ namespace Npgsql
                 packet_size += (parameterNames[i].Length + parameterValues[i].Length + 2);
             }
 
-            output_stream
+            outputStream
                 .WriteInt32(packet_size)
                 .WriteInt32(PGUtil.ConvertProtocolVersion(ProtocolVersion.Version3));
 
             for (int i = 0; i < parameterNames.Count; i++)
             {
-                output_stream
+                outputStream
                     .WriteBytesNullTerminated(parameterNames[i])
                     .WriteBytesNullTerminated(parameterValues[i]);
             }
 
-            output_stream.WriteByte(0);
+            outputStream.WriteByte(0);
         }
     }
 }

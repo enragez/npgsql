@@ -185,6 +185,18 @@ namespace Npgsql
 
             return BackendEncoding.UTF8Encoding.GetString(buffer.ToArray());
         }
+        
+        ///<summary>
+        /// This method gets a C NULL terminated string from the network stream.
+        /// It keeps reading a byte in each time until a NULL byte is returned.
+        /// It returns the resultant string of bytes read.
+        /// This string is sent from backend.
+        /// </summary>
+        public static String ReadString(NpgsqlBufferedStream network_stream)
+        {
+            NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "ReadString");
+            return network_stream.ReadString();
+        }
 
         public static char ReadChar(Stream stream)
         {
@@ -431,7 +443,40 @@ namespace Npgsql
 
             return stream;
         }
+        
+        ///<summary>
+        /// This method writes a C NULL terminated string to the network stream.
+        /// It appends a NULL terminator to the end of the String.
+        /// </summary>
+        public static NpgsqlBufferedStream WriteStringNullTerminated(this NpgsqlBufferedStream stream, String format, params object[] parameters)
+        {
+            NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "WriteStringNullTerminated");
 
+            string theString = string.Format(format, parameters);
+
+            NpgsqlEventLog.LogMsg(resman, "Log_StringWritten", LogLevel.Debug, theString);
+
+            byte[] bytes = BackendEncoding.UTF8Encoding.GetBytes(theString);
+
+            stream.Write(bytes, 0, bytes.Length);
+            stream.WriteByte(0);
+
+            return stream;
+        }
+
+        /// <summary>
+        /// This method writes a byte to the stream. It also enables logging of them.
+        /// </summary>
+        public static NpgsqlBufferedStream WriteBytes(this NpgsqlBufferedStream stream, byte the_byte)
+        {
+            NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "WriteByte");
+            NpgsqlEventLog.LogMsg(resman, "Log_BytesWritten", LogLevel.Debug, the_byte);
+
+            stream.WriteByte(the_byte);
+
+            return stream;
+        }
+        
         /// <summary>
         /// This method writes a byte to the stream. It also enables logging of them.
         /// </summary>
@@ -462,6 +507,19 @@ namespace Npgsql
         /// <summary>
         /// This method writes a set of bytes to the stream. It also enables logging of them.
         /// </summary>
+        public static NpgsqlBufferedStream WriteBytes(this NpgsqlBufferedStream stream, byte[] the_bytes)
+        {
+            NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "WriteBytes");
+            NpgsqlEventLog.LogMsg(resman, "Log_BytesWritten", LogLevel.Debug, the_bytes);
+
+            stream.Write(the_bytes, 0, the_bytes.Length);
+
+            return stream;
+        }
+        
+        /// <summary>
+        /// This method writes a set of bytes to the stream. It also enables logging of them.
+        /// </summary>
         public static Stream WriteBytes(this Stream stream, byte[] the_bytes)
         {
             NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "WriteBytes");
@@ -476,6 +534,20 @@ namespace Npgsql
         /// This method writes a set of bytes to the stream. It also enables logging of them.
         /// </summary>
         public static Stream WriteBytesNullTerminated(this Stream stream, byte[] the_bytes)
+        {
+            NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "WriteBytes");
+            NpgsqlEventLog.LogMsg(resman, "Log_BytesWritten", LogLevel.Debug, the_bytes);
+
+            stream.Write(the_bytes, 0, the_bytes.Length);
+            stream.WriteByte(0);
+
+            return stream;
+        }
+        
+        /// <summary>
+        /// This method writes a set of bytes to the stream. It also enables logging of them.
+        /// </summary>
+        public static NpgsqlBufferedStream WriteBytesNullTerminated(this NpgsqlBufferedStream stream, byte[] the_bytes)
         {
             NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "WriteBytes");
             NpgsqlEventLog.LogMsg(resman, "Log_BytesWritten", LogLevel.Debug, the_bytes);
@@ -543,6 +615,25 @@ namespace Npgsql
         }
 
         public static void CheckedStreamRead(Stream stream, Byte[] buffer, Int32 offset, Int32 size)
+        {
+            Int32 bytes_from_stream = 0;
+            Int32 total_bytes_read = 0;
+            // need to read in chunks so the socket doesn't run out of memory in recv
+            // the network stream doesn't prevent this and downloading a large bytea
+            // will throw an IOException with an error code of 10055 (WSAENOBUFS)
+            int maxReadChunkSize = 8192;
+
+            while (size > 0)
+            {
+                // chunked read of maxReadChunkSize
+                int readSize = (size > maxReadChunkSize) ? maxReadChunkSize : size;
+                bytes_from_stream = stream.Read(buffer, offset + total_bytes_read, readSize);
+                total_bytes_read += bytes_from_stream;
+                size -= bytes_from_stream;
+            }
+        }
+        
+        public static void CheckedStreamRead(NpgsqlBufferedStream stream, Byte[] buffer, Int32 offset, Int32 size)
         {
             Int32 bytes_from_stream = 0;
             Int32 total_bytes_read = 0;
@@ -645,10 +736,18 @@ namespace Npgsql
         /// <summary>
         /// Write a 32-bit integer to the given stream in the correct byte order.
         /// </summary>
+        public static NpgsqlBufferedStream WriteInt32(this NpgsqlBufferedStream stream, Int32 value)
+        {
+            stream.Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(value)), 0, 4);
+            return stream;
+        }
+        
+        /// <summary>
+        /// Write a 32-bit integer to the given stream in the correct byte order.
+        /// </summary>
         public static Stream WriteInt32(this Stream stream, Int32 value)
         {
             stream.Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(value)), 0, 4);
-
             return stream;
         }
 
@@ -656,6 +755,16 @@ namespace Npgsql
         /// Read a 32-bit integer from the given stream in the correct byte order.
         /// </summary>
         public static Int32 ReadInt32(Stream stream)
+        {
+            byte[] buffer = new byte[4];
+            CheckedStreamRead(stream, buffer, 0, 4);
+            return IPAddress.NetworkToHostOrder(BitConverter.ToInt32(buffer, 0));
+        }
+        
+        /// <summary>
+        /// Read a 32-bit integer from the given stream in the correct byte order.
+        /// </summary>
+        public static Int32 ReadInt32(NpgsqlBufferedStream stream)
         {
             byte[] buffer = new byte[4];
             CheckedStreamRead(stream, buffer, 0, 4);
@@ -673,7 +782,7 @@ namespace Npgsql
         /// <summary>
         /// Write a 16-bit integer to the given stream in the correct byte order.
         /// </summary>
-        public static Stream WriteInt16(this Stream stream, Int16 value)
+        public static NpgsqlBufferedStream WriteInt16(this NpgsqlBufferedStream stream, Int16 value)
         {
             stream.Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(value)), 0, 2);
 

@@ -107,7 +107,7 @@ namespace NpgsqlTypes
         /// client code.
         /// </summary>
         /// <param name="s"></param>
-        internal void Send(Stream s)
+        internal void Send(NpgsqlBufferedStream s)
         {
             if (type)
             {

@@ -57,14 +57,14 @@ namespace NpgsqlTypes
         /// <summary>
         /// The network stream.
         /// </summary>
-        protected Stream stream;
+        protected NpgsqlBufferedStream stream;
 
         /// <summary>
         /// Initialises the fastpath system.
         /// </summary>
         /// <param name="conn">BaseConnection to attach to.</param>
         /// <param name="stream">The network stream to the backend.</param>
-        public Fastpath(NpgsqlConnection conn, Stream stream)
+        public Fastpath(NpgsqlConnection conn, NpgsqlBufferedStream stream)
         {
             this.conn = conn;
             this.stream = stream;

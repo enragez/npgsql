@@ -48,7 +48,7 @@ namespace Npgsql
             this.BackendKeydata = BackendKeydata;
         }
 
-        public override void WriteToStream(Stream outputStream)
+        protected override void WriteToStreamInternal(NpgsqlBufferedStream outputStream)
         {
             PGUtil.WriteInt32(outputStream, CancelRequestMessageSize);
             PGUtil.WriteInt32(outputStream, CancelRequestCode);

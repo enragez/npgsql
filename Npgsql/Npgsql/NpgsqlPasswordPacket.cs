@@ -51,7 +51,7 @@ namespace Npgsql
             this.password = password;
         }
 
-        public override void WriteToStream(Stream outputStream)
+        protected override void WriteToStreamInternal(NpgsqlBufferedStream outputStream)
         {
             NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "WriteToStream");
 

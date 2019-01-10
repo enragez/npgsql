@@ -34,7 +34,7 @@ namespace Npgsql
     /// server.
     /// </summary>
     ///
-    internal sealed class NpgsqlParameterStatus
+    public sealed class NpgsqlParameterStatus
     {
         public readonly string Parameter;
         public readonly string ParameterValue;

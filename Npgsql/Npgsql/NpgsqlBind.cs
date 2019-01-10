@@ -104,7 +104,7 @@ namespace Npgsql
             }
         }
 
-        public override void WriteToStream(Stream outputStream)
+        protected override void WriteToStreamInternal(NpgsqlBufferedStream outputStream)
         {
             if (_messageLength == 0)
             {

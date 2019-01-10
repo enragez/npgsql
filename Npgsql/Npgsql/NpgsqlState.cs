@@ -82,7 +82,7 @@ namespace Npgsql
         {
             //ZA  Hnotifytest CNOTIFY Z
             //Qlisten notifytest;notify notifytest;
-            Stream stm = context.Stream;
+            var stm = context.Stream;
 //            string uuidString = "uuid" + Guid.NewGuid().ToString("N");
             string uuidString = string.Format("uuid{0:N}", Guid.NewGuid());
             Queue<byte> buffer = new Queue<byte>();
@@ -131,7 +131,7 @@ namespace Npgsql
 
         public void EmptySync(NpgsqlConnector context)
         {
-            Stream stm = context.Stream;
+            var stm = context.Stream;
             NpgsqlSync.Default.WriteToStream(stm);
             stm.Flush();
             Queue<int> buffer = new Queue<int>();
@@ -203,7 +203,7 @@ namespace Npgsql
 
         // COPY methods
 
-        protected virtual void StartCopy(NpgsqlConnector context, NpgsqlCopyFormat copyFormat)
+        public virtual void StartCopy(NpgsqlConnector context, NpgsqlCopyFormat copyFormat)
         {
             throw new InvalidOperationException("Internal Error! " + this);
         }
@@ -390,17 +390,7 @@ namespace Npgsql
             return socketPoolResponse || context.Socket.Poll (1000000 * secondsToWait, selectMode);
         }
 
-        private static NpgsqlCopyFormat ReadCopyHeader(Stream stream)
-        {
-            byte copyFormat = (byte) stream.ReadByte();
-            Int16 numCopyFields = PGUtil.ReadInt16(stream);
-            Int16[] copyFieldFormats = new Int16[numCopyFields];
-            for (Int16 i = 0; i < numCopyFields; i++)
-            {
-                copyFieldFormats[i] = PGUtil.ReadInt16(stream);
-            }
-            return new NpgsqlCopyFormat(copyFormat, copyFieldFormats);
-        }
+        
     }
 
     /// <summary>
@@ -444,7 +434,13 @@ namespace Npgsql
     /// </summary>
     internal abstract class ClientMessage
     {
-        public abstract void WriteToStream(Stream outputStream);
+        public void WriteToStream(NpgsqlBufferedStream outputStream)
+        {
+            outputStream.EnterWriteLock();
+            WriteToStreamInternal(outputStream);
+        }
+
+        protected abstract void WriteToStreamInternal(NpgsqlBufferedStream outputstream);
     }
 
     /// <summary>
@@ -466,7 +462,7 @@ namespace Npgsql
                 .WriteInt32(4);
         }
 
-        public override void WriteToStream(Stream outputStream)
+        protected override void WriteToStreamInternal(NpgsqlBufferedStream outputStream)
         {
             outputStream.WriteBytes(_messageData);
         }
@@ -477,7 +473,7 @@ namespace Npgsql
     /// Marker interface which identifies a class which represents part of
     /// a response from the server.
     /// </summary>
-    internal interface IServerResponseObject
+    public interface IServerResponseObject
     {
     }
 

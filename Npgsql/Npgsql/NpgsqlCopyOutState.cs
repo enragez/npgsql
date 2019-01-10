@@ -59,7 +59,7 @@ namespace Npgsql
         /// If CopyStream is already set, it is used to write data received from server, after which the copy ends.
         /// Otherwise CopyStream is set to a readable NpgsqlCopyOutStream that receives data from server.
         /// </summary>
-        protected override void StartCopy(NpgsqlConnector context, NpgsqlCopyFormat copyFormat)
+        public override void StartCopy(NpgsqlConnector context, NpgsqlCopyFormat copyFormat)
         {
             _copyFormat = copyFormat;
             Stream userFeed = context.Mediator.CopyStream;

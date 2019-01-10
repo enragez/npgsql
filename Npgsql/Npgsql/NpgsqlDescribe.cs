@@ -57,7 +57,7 @@ namespace Npgsql
             _messageLength = 4 + 1 + _bPortalName.Length + 1;
         }
 
-        public override void WriteToStream(Stream outputStream)
+        protected override void WriteToStreamInternal(NpgsqlBufferedStream outputStream)
         {
             outputStream
                 .WriteBytes((byte)FrontEndMessageCode.Describe)

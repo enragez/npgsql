@@ -56,7 +56,7 @@ namespace Npgsql
         /// If CopyStream is already set, it is used to read data to push to server, after which the copy is completed.
         /// Otherwise CopyStream is set to a writable NpgsqlCopyInStream that calls SendCopyData each time it is written to.
         /// </summary>
-        protected override void StartCopy(NpgsqlConnector context, NpgsqlCopyFormat copyFormat)
+        public override void StartCopy(NpgsqlConnector context, NpgsqlCopyFormat copyFormat)
         {
             _copyFormat = copyFormat;
             Stream userFeed = context.Mediator.CopyStream;
@@ -84,7 +84,7 @@ namespace Npgsql
         /// </summary>
         public override void SendCopyData(NpgsqlConnector context, byte[] buf, int off, int len)
         {
-            Stream toServer = context.Stream;
+            var toServer = context.Stream;
             toServer.WriteByte((byte) FrontEndMessageCode.CopyData);
             PGUtil.WriteInt32(toServer, len + 4);
             toServer.Write(buf, off, len);
@@ -95,7 +95,7 @@ namespace Npgsql
         /// </summary>
         public override void SendCopyDone(NpgsqlConnector context)
         {
-            Stream toServer = context.Stream;
+            var toServer = context.Stream;
             toServer.WriteByte((byte) FrontEndMessageCode.CopyDone);
             PGUtil.WriteInt32(toServer, 4); // message without data
             ProcessAndDiscardBackendResponses(context);
@@ -109,7 +109,7 @@ namespace Npgsql
         /// </summary>
         public override void SendCopyFail(NpgsqlConnector context, String message)
         {
-            Stream toServer = context.Stream;
+            var toServer = context.Stream;
             toServer.WriteByte((byte) FrontEndMessageCode.CopyFail);
             byte[] buf = BackendEncoding.UTF8Encoding.GetBytes((message ?? string.Empty) + '\x00');
             PGUtil.WriteInt32(toServer, 4 + buf.Length);

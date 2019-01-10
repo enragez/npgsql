@@ -353,7 +353,7 @@ namespace Npgsql
             return B.ToString();
         }
 
-        internal NpgsqlError(Stream stream)
+        internal NpgsqlError(NpgsqlBufferedStream stream)
         {
             // Check the messageLength value. If it is 1178686529, this would be the
             // "FATA" string, which would mean a protocol 2.0 error string.

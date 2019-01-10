@@ -60,7 +60,7 @@ namespace Npgsql
             get { return _portalName; }
         }
 
-        public override void WriteToStream(Stream outputStream)
+        protected override void WriteToStreamInternal(NpgsqlBufferedStream outputStream)
         {
             outputStream.WriteBytes(_messageData);
         }

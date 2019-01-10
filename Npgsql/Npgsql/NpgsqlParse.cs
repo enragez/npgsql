@@ -53,7 +53,7 @@ namespace Npgsql
             _parameterIDs = parameterIDs;
         }
 
-        public override void WriteToStream(Stream outputStream)
+        protected override void WriteToStreamInternal(NpgsqlBufferedStream outputStream)
         {
             outputStream.WriteByte((byte)FrontEndMessageCode.Parse);
 

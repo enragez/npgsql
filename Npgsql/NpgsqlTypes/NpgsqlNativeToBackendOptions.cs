@@ -42,7 +42,7 @@ namespace NpgsqlTypes
     /// Options that control certain aspects of native to backend conversions that depend
     /// on backend version and status.
     /// </summary>
-    internal class NativeToBackendTypeConverterOptions : ICloneable
+    public class NativeToBackendTypeConverterOptions : ICloneable
     {
         internal static NativeToBackendTypeConverterOptions _default;
 

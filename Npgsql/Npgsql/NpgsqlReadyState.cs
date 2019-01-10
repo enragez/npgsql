@@ -87,11 +87,11 @@ namespace Npgsql
         public override void Close(NpgsqlConnector context)
         {
             NpgsqlEventLog.LogMethodEnter(LogLevel.Debug, CLASSNAME, "Close");
-            Stream stream = context.Stream;
+            var stream = context.Stream;
             try
             {
                 stream
-                    .WriteBytes((byte) FrontEndMessageCode.Termination)
+                    .WriteBytes((byte)FrontEndMessageCode.Termination)
                     .WriteInt32(4)
                     .Flush();
             }
