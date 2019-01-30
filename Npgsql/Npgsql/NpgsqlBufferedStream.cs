@@ -224,7 +224,11 @@ namespace Npgsql
                                     _sync.ExitReadLock();
                                     context.Authenticate(
                                         NullTerminateArray(BackendEncoding.UTF8Encoding.GetBytes(sb.ToString())));
-
+                                    if (_sync.IsWriteLockHeld)
+                                    {
+                                        _sync.ExitWriteLock();
+                                    }
+                                    
                                     break;
 #if WINDOWS && UNMANAGED
 
