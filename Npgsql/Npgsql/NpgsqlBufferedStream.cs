@@ -28,6 +28,15 @@ namespace Npgsql
                 _sync.EnterWriteLock();
             }
         }
+        
+        /// <summary>Заблокировать поток на запись</summary>
+        public void ExitWriteLock()
+        {
+            if (_sync.IsWriteLockHeld)
+            {
+                _sync.ExitWriteLock();
+            }
+        }
 
         /// <summary>Записать байты в поток</summary>
         /// <param name="buffer">байты для записи</param>
@@ -68,7 +77,11 @@ namespace Npgsql
         {
             try
             {
-                _sync.EnterReadLock();
+                if (!_sync.IsReadLockHeld)
+                {
+                    _sync.EnterReadLock();
+                }
+
                 return _stream.Read(buffer, offset, count);
             }
             finally
@@ -84,7 +97,11 @@ namespace Npgsql
         {
             try
             {
-                _sync.EnterReadLock();
+                if (!_sync.IsReadLockHeld)
+                {
+                    _sync.EnterReadLock();
+                }
+
                 var buffer = new List<byte>();
                 for (int bRead = _stream.ReadByte(); bRead != 0; bRead = _stream.ReadByte())
                 {
@@ -486,10 +503,7 @@ namespace Npgsql
             }
             finally
             {
-                if (_sync.IsWriteLockHeld)
-                {
-                    _sync.ExitWriteLock();
-                }
+                ExitWriteLock();
             }
         }
 
