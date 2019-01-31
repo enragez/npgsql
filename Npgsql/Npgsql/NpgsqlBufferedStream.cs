@@ -148,6 +148,7 @@ namespace Npgsql
                     {
                         case BackEndMessageCode.ErrorResponse:
 
+                            ExitWriteLock();
                             NpgsqlError error = new NpgsqlError(this);
                             error.ErrorSql = mediator.GetSqlSent();
 
